@@ -17,11 +17,15 @@ function handleError(err) {
   process.exit(1);
 }
 
-function printStatusTable(statusItems) {
+async function printStatusTable(statusItems) {
   return migrateMongo.config.read().then(config => {
     const useFileHash = config.useFileHash === true;
     const table = new Table({ head: useFileHash ? ["Filename", "Hash", "Applied At"] : ["Filename", "Applied At"]});
-    statusItems.forEach(item => table.push(_.values(item)));
+    statusItems.forEach(item => {
+      const migration = item;
+      delete migration.fileContents;
+      table.push(_.values(migration))
+    });
     console.log(table.toString());
   })
   
@@ -102,19 +106,20 @@ program
   .command("status")
   .description("print the changelog of the database")
   .option("-f --file <file>", "use a custom config file")
-  .action(options => {
+  .action(async options => {
     global.options = options;
-    migrateMongo.database
-      .connect()
-      .then(({db, client}) => migrateMongo.status(db, client))
-      .then(statusItems => printStatusTable(statusItems))
-      .then(() => {
-        process.exit(0);
-      })
-      .catch(err => {
-        handleError(err);
-      });
-  });
+    try {
+      const { db } = await migrateMongo.database.connect();
+      const config = await migrateMongo.config.read();
+
+      const statusItems = await migrateMongo.status(db, config.saveFileContents);
+
+      await printStatusTable(statusItems);
+      process.exit(0);
+    } catch (err) {
+      handleError(err);
+    }
+  })
 
 program.parse(process.argv);
 
