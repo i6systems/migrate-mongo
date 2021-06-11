@@ -1,5 +1,5 @@
 {
-  "name": "migrate-mongo",
+  "name": "@i6systems/migrate-mongo",
   "version": "8.2.2",
   "description": "A database migration tool for MongoDB in Node",
   "main": "lib/migrate-mongo.js",
@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/seppevs/migrate-mongo.git"
+    "url": "git+https://github.com/i6systems/migrate-mongo.git"
   },
   "engines": {
     "node": ">=8"
